@@ -1,0 +1,73 @@
+#!/usr/bin/env python
+
+usage = """
+USAGE: ./preprocess [OPTIONS] [file]...
+
+  OPTIONS:
+    -i[extension]        Modify files in place (default False). If extension given
+                         create backups with that extension.
+    -n <size>            Create file with sample of size points.
+
+  EXAMPLE: ./preprocess -n 100 -i.bak *.csv
+"""
+
+import sys
+import os
+
+def fix_csvs(files, sample=None, in_place=False):
+    file_data = []
+    for _file in files:
+        with open(_file) as _buffer:
+            lines = _buffer.readlines()
+            line_data = {}
+            for line in lines:
+                line_data[line.split(",")[-1]] = line
+            data = {
+                "filename": _file,
+                "data": line_data
+            }
+            file_data.append(data)
+        if isinstance(in_place, str):
+            os.rename(_file, _file + in_place)
+
+    longest = file_data[0]
+    for data in file_data:
+        if len(data["data"]) > len(longest["data"]):
+            longest = data
+
+    # TODO: actually use sample variable
+    #
+    for data in file_data:
+        lines = []
+        for _id in longest["data"]:
+            if _id in data["data"]:
+                lines.append(data["data"][_id])
+            else:
+                lines.append(",,,,,,," + _id + "\n")
+        if in_place:
+            f = open(data["filename"], "w")
+            f.writelines(lines)
+            f.close()
+        else:
+            print(lines)
+
+
+if len(sys.argv) < 2:
+    print(usage)
+    exit(1)
+else:
+    in_place = False
+    file_index = None
+    sample = None
+    for i in range(1, len(sys.argv)):
+        if "-i" in sys.argv[i]:
+            if "-i" == sys.argv[i]:
+                in_place = True
+            else:
+                in_place = sys.argv[i][2:]
+        elif "-n" == sys.argv[i]:
+            sample = int(sys.argv[i+1])
+        else:
+            file_index = i
+            break
+    fix_csvs(sys.argv[file_index:], sample, in_place)
