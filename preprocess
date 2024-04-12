@@ -4,27 +4,31 @@ usage = """
 USAGE: ./preprocess [OPTIONS] [file]...
 
   OPTIONS:
-    -i[extension]        Modify files in place (default False). If extension given
-                         create backups with that extension.
-    -n <size>            Create file with sample of size points.
+    -i[extension]          Modify files in place (default False). If extension given
+                           create backups with that extension.
+    -n <size>              Create file with sample of size points.
+    --separate-escapees    Separate the escapees from the non-escapees into files
+                           prefixed with [non]escapee-
 
-  EXAMPLE: ./preprocess -n 100 -i.bak *.csv
+  EXAMPLE: ./preprocess -n 100 -i.bak --separate-escapees *.csv
 """
 
 import sys
 import os
+from pathlib import Path
 
-def fix_csvs(files, sample=None, in_place=False):
+def fix_csvs(files, sample=None, in_place=False, separate_escapees=False):
     file_data = []
     for _file in files:
         with open(_file) as _buffer:
             lines = _buffer.readlines()
             line_data = {}
-            for line in lines:
+            for line in lines[1:]:
                 line_data[line.split(",")[-1]] = line
             data = {
                 "filename": _file,
-                "data": line_data
+                "data": line_data,
+                "header": lines[0],
             }
             file_data.append(data)
         if isinstance(in_place, str):
@@ -37,13 +41,18 @@ def fix_csvs(files, sample=None, in_place=False):
 
     # TODO: actually use sample variable
     #
+
+    escapee_ids = {}
+
     for data in file_data:
-        lines = []
+        lines = [data["header"]]
         for _id in longest["data"]:
             if _id in data["data"]:
                 lines.append(data["data"][_id])
             else:
-                lines.append(",,,,,,," + _id + "\n")
+                lines.append(",,,,,,," + _id)
+                if separate_escapees:
+                    escapee_ids[_id] = True
         if in_place:
             f = open(data["filename"], "w")
             f.writelines(lines)
@@ -51,12 +60,38 @@ def fix_csvs(files, sample=None, in_place=False):
         else:
             print(lines)
 
+    # filter out escapees if given:
+    if separate_escapees:
+        for data in file_data:
+            escapee_lines = [data["header"]]
+            nonescapee_lines = [data["header"]]
+            for _id in longest["data"]:
+                if _id in escapee_ids:
+                    if _id in data["data"]:
+                        escapee_lines.append(data["data"][_id])
+                    else:
+                        escapee_lines.append(",,,,,,," + _id)
+                else:
+                    if _id in data["data"]:
+                        nonescapee_lines.append(data["data"][_id])
+                    else:
+                        nonescapee_lines.append(",,,,,,," + _id)
+            p = Path(data["filename"])
+            f = open(p.with_name("escapee_" + p.name), "w")
+            f.writelines(escapee_lines)
+            f.close()
+            f = open(p.with_name("nonescapee_" + p.name), "w")
+            f.writelines(nonescapee_lines)
+            f.close()
+
+
 
 if len(sys.argv) < 2:
     print(usage)
     exit(1)
 else:
     in_place = False
+    separate_escapees = False
     file_index = None
     sample = None
     for i in range(1, len(sys.argv)):
@@ -67,7 +102,9 @@ else:
                 in_place = sys.argv[i][2:]
         elif "-n" == sys.argv[i]:
             sample = int(sys.argv[i+1])
+        elif "--separate-escapees" == sys.argv[i]:
+            separate_escapees = True
         else:
             file_index = i
             break
-    fix_csvs(sys.argv[file_index:], sample, in_place)
+    fix_csvs(sys.argv[file_index:], sample, in_place, separate_escapees)
