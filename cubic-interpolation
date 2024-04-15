@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+import numpy as np
+from scipy.interpolate import CubicSpline
+import pandas as pd
+
+def interpolate(files, step_size, output_dir):
+    sorted_files = sorted(files)
+    time_steps = np.arange(0,len(sorted_files)+step_size, step_size)
+
+    print(f"Estimated total output size: {len(time_steps) * os.path.getsize(files[0]):,} bytes")
+
+    """
+    values_by_id = {
+        31: {
+            x: [
+                12,
+                23,
+                34,
+            ],
+            y: [
+            ]
+        }
+    }"""
+
+
+    ### read in the data and sort by id
+    values_by_id = {}
+    for _file in sorted_files:
+        df = pd.read_csv(_file, index_col="id")
+        for _id, row in df.iterrows():
+            if not _id in values_by_id:
+                values_by_id[_id] = {}
+            # iterate over column names
+            for key in df:
+                if not key in values_by_id[_id]:
+                    values_by_id[_id][key] = []
+                if np.isnan(row[key]):
+                    # handle escaped stars by copying the previous value.
+                    # an alternative approach would be to set to 0's
+                    values_by_id[_id][key].append(values_by_id[_id][key][-1])
+                else:
+                    values_by_id[_id][key].append(row[key])
+
+    ### update values_by_id with interpolated values
+    ### done in place in hope to help with memory consumption
+    for _id in values_by_id:
+        for key in df:
+            cs = CubicSpline(list(range(len(sorted_files))), values_by_id[_id][key])
+            values_by_id[_id][key] = cs(time_steps)
+
+    ### write to the new interpolated files
+    first_line = "x,y,z,vx,vy,vz,m,id\n"
+    for i in range(len(time_steps)):
+        with open(os.path.join(output_dir, f"interpolated_{i:04}.csv"), "w") as _buffer:
+            _buffer.write(first_line)
+            for _id in values_by_id:
+                for key in df:
+                    _buffer.write(str(values_by_id[_id][key][i]))
+                    _buffer.write(",")
+                _buffer.write(str(_id))
+                _buffer.write("\n")
+
+
+if len(sys.argv) < 2:
+    print("USAGE: ./cubic-interpolation -n [step_size] -o [output_directory] file0.csv file1.csv ...")
+    exit(1)
+else:
+    step_size = None
+    output_dir = None
+    for i in range(1, len(sys.argv)):
+        if "-n" == sys.argv[i]:
+            step_size = float(sys.argv[i+1])
+        elif "-o" == sys.argv[i]:
+            output_dir = sys.argv[i+1]
+        elif sys.argv[i-1] not in ["-o","-n"]:
+            file_index = i
+            break
+    if not output_dir or not step_size:
+        print("USAGE: ./cubic-interpolation -n [step_size] -o [output_directory] file0.csv file1.csv ...")
+        exit(2)
+    interpolate(sys.argv[file_index:], step_size, output_dir)
