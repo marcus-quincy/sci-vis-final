@@ -6,4 +6,7 @@
  (list
   (specifications->manifest
    '("paraview"
-     "python"))))
+     "python"
+     "python-numpy"
+     "python-scipy"
+     "python-pandas"))))
