@@ -9,4 +9,6 @@
      "python"
      "python-numpy"
      "python-scipy"
-     "python-pandas"))))
+     "python-pandas"
+     "python-seaborn"
+     "python-matplotlib"))))
