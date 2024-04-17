@@ -140,4 +140,6 @@ This will use matplotlib to visualize the data.
 Now with the data processed, the Paraview [state files](./stateFiles/) can be
 loaded. Be sure to select the data manually instead of using the paths in the
 state file. Which CSV files are expected to be associated with each ParaView
-file is described in the "Description of files in this repo" section above.
+file is described in the "Description of files in this repo" section above (note
+not all CSV files are part of the repo to prevent it from getting bigger than it
+already is).
