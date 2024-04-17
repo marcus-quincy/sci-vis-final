@@ -4,7 +4,7 @@ import glob
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-files = sorted(glob.glob('splitData/ids_c_*.csv'))
+files = sorted(glob.glob('csvs/splitData/ids_c_*.csv'))
 
 def augment_csv_with_speed(df):
     df['speed'] = df.apply(lambda row: np.linalg.norm([row.vx,row.vy,row.vz]),axis=1)

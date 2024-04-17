@@ -70,11 +70,24 @@ python.
     - fixMissingIds.py
         - Adds id's to the data to compensate for all the stars missing data.
     - speedPlot.py
-        - Plots the speeds of the stars in relation to the time steps.
+        - Plots the speeds of the stars in relation to the time steps. Uses the
+          output of the Split.py script.
     - Split.py
         - Splits the data into escapees and nonescapees.
 
 ## Steps to reproduce
+
+### Requirements
+
+- ParaView (5.11 required for cubic interpolation animation state file)
+- python3
+- numpy
+- scipy
+- pandas
+- seaborn
+- matplotlib
+
+All these can be installed via `guix shell -m manifest.scm`.
 
 ### Pre Process the data
 
@@ -82,7 +95,7 @@ Note: most of the processed data has been saved already in the repository.
 
 First missing ids (escapees) need to be populated back into the csv files. This is done with the preprocess script.
 ```
-./preprocess -i.bak --separate-escapees data/c_*.csv
+./python/preprocess -i.bak --separate-escapees data/c_*.csv
 ```
 This will also copy the data for the ids that escape into another set of csv
 files. The output of these files will be in the same directory that the files
@@ -92,13 +105,19 @@ For cubic interpolation run the following. This will create ~700MB of data for
 the entire csv set. For example to generate cubic interpolation data for the
 escaped stars with a time step every 0.02 time steps of the original run:
 ```
-./cubic-interpolation -n 0.02 -o <output dir> <path to csv e.g. data/escapee_c_*>
+./python/cubic-interpolation -n 0.02 -o <output dir> <path to csv e.g. data/escapee_c_*>
 ```
 
 For Centroid calculation, first edit the input and output files to the desired
 location then run `python Centroid.py`. To use this script edit the source file
 to contain input and output directory paths.
 
+To view the plots analyzing the data:
+```
+python3 python/speedPlot.py
+```
+
+This will use matplotlib to visualize the data.
 
 ### Load the Paraview state files
 
