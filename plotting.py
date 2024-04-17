@@ -46,13 +46,24 @@ drop_idx = find_repeat_time_idx(speed_pivot)
 drop_repeats(speed_pivot,drop_idx)
 drop_repeats(dist_pivot,drop_idx)
 
-df = dist_pivot
+speed_df = speed_pivot
+dist_df = dist_pivot
 print(df.head())
 
 plt.figure(figsize=(20,20))
-ax = sns.lineplot(df,dashes=False,markers=['o'])
+ax = sns.lineplot(speed_df,dashes=False,markers=['o'])
+ax.set_xticks(range(19))
+ax.set_xlabel('Time Step')
+ax.set_ylabel('Speed')
+ax.set_title('Star Speed Over Time')
+sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
+plt.show()
+
+plt.figure(figsize=(20,20))
+ax = sns.lineplot(dist_df,dashes=False,markers=['o'])
 ax.set_xticks(range(19))
 ax.set_xlabel('Time Step')
 ax.set_ylabel('Distance from Center of Cluster')
+ax.set_title('Star Distance from Center Over Time')
 sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
 plt.show()
