@@ -93,9 +93,13 @@ All these can be installed via `guix shell -m manifest.scm`.
 
 Note: most of the processed data has been saved already in the repository.
 
-First missing ids (escapees) need to be populated back into the csv files. This is done with the preprocess script.
+**Cubic Interpolation**
+
+First missing ids (escapees) need to be populated back into the csv files. This
+is done with the preprocess script. (If cloned this repo this step is done for
+you...)
 ```
-./python/preprocess -i.bak --separate-escapees data/c_*.csv
+./python/preprocess -i.bak --separate-escapees csvs/data/c_*.csv
 ```
 This will also copy the data for the ids that escape into another set of csv
 files. The output of these files will be in the same directory that the files
@@ -105,12 +109,24 @@ For cubic interpolation run the following. This will create ~700MB of data for
 the entire csv set. For example to generate cubic interpolation data for the
 escaped stars with a time step every 0.02 time steps of the original run:
 ```
-./python/cubic-interpolation -n 0.02 -o <output dir> <path to csv e.g. data/escapee_c_*>
+./python/cubic-interpolation -n 0.02 -o <output dir> <path to csv e.g. csvs/data/escapee_c_*>
 ```
 
-For Centroid calculation, first edit the input and output files to the desired
-location then run `python Centroid.py`. To use this script edit the source file
-to contain input and output directory paths.
+**Centroids**
+
+For Centroid calculation, first edit the input and output files in the source
+file to the desired location then run `python python/Centroid.py`. The tail of the file
+should look like:
+
+```python
+if __name__ == "__main__":
+    input_dir = "csvs/splitData"  # Change this to the input directory containing CSV files
+    output_dir = "my-output-dir"  # Specify the output directory to save centroid CSV files
+
+    process_csv_files(input_dir, output_dir)
+```
+
+**Plots**
 
 To view the plots analyzing the data:
 ```
